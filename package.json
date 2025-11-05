@@ -10,17 +10,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@types/leaflet": "^1.9.21",
     "clsx": "^2.1.0",
     "date-fns": "^2.30.0",
     "firebase": "^10.7.1",
+    "firebase-admin": "^13.5.0",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.303.0",
     "next": "^16.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-firebase-hooks": "^5.1.1",
     "react-hook-form": "^7.49.2",
+    "react-leaflet": "^4.2.1",
     "recharts": "^2.10.3",
     "tailwind-merge": "^2.2.0",
     "xlsx": "^0.18.5"

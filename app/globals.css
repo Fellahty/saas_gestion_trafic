@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Leaflet CSS */
+@import 'leaflet/dist/leaflet.css';
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -119,6 +122,63 @@
   100% {
     transform: translateX(200%) skewX(-12deg);
   }
+}
+
+/* Animation pour les trajets en cours */
+@keyframes dash {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.animate-dash {
+  animation: dash 1s linear infinite;
+}
+
+/* Styles pour Leaflet */
+.leaflet-container {
+  font-family: var(--font-inter), 'Inter', system-ui, sans-serif;
+  background: #f8fafc;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.leaflet-popup-content {
+  margin: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.leaflet-popup-tip {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Pas d'effet hover sur les marqueurs */
+
+/* Animation pour les trajets en cours */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.marker-start, .marker-end {
+  animation: pulse-glow 2s ease-in-out infinite;
+  cursor: pointer;
+}
+
+.marker-start img, .marker-end img {
+  /* Pas de filtre - couleur originale conservée */
+  transition: transform 0.2s ease;
 }
 
 .animate-shine {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { collection, getDocs, deleteDoc, doc, addDoc, Timestamp, query, where } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase.config';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/firebase.config';
@@ -77,6 +77,7 @@ export default function ClearAndSeedPage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string>('');
+  const [summary, setSummary] = useState<any>(null);
 
   // Vérifier que l'utilisateur est admin
   if (loading) {
@@ -216,6 +217,7 @@ export default function ClearAndSeedPage() {
         { depart: 'Rabat', destination: 'Khenifra' },
       ];
       
+      const missions: any[] = [];
       for (let i = 0; i < 12; i++) {
         const trajet = i < trajetsSpeciaux.length ? trajetsSpeciaux[i] : trajetsSpeciaux[i % trajetsSpeciaux.length];
         const camion = camions[i % camions.length];
@@ -258,11 +260,12 @@ export default function ClearAndSeedPage() {
         }
         
         if (statut === 'termine') {
-          missionData.recette = Math.floor(3500 + Math.random() * 4000);
+          missionData.recette = Math.floor(6000 + Math.random() * 6000); // Augmenté à 6000-12000
         }
         
         const cleanedData = removeUndefinedFields(missionData);
-        await addDoc(collection(db, 'missions'), cleanedData);
+        const missionRef = await addDoc(collection(db, 'missions'), cleanedData);
+        missions.push({ id: missionRef.id, ...cleanedData });
       }
 
       // Créer des assurances
@@ -341,13 +344,13 @@ export default function ClearAndSeedPage() {
         let description = '';
         
         if (type === 'carburant') {
-          montant = Math.floor(800 + Math.random() * 1500);
+          montant = Math.floor(800 + Math.random() * 1000); // Réduit à 800-1800
           description = `Carburant - Station ${['Shell', 'Total', 'Afriquia'][Math.floor(Math.random() * 3)]}`;
         } else if (type === 'entretien') {
-          montant = Math.floor(1500 + Math.random() * 2500);
+          montant = Math.floor(800 + Math.random() * 1200); // Réduit à 800-2000
           description = `Entretien - Garage Central`;
         } else {
-          montant = Math.floor(9000 + Math.random() * 3000);
+          montant = Math.floor(6000 + Math.random() * 1500); // Réduit à 6000-7500
           description = `Salaire chauffeur`;
         }
         
@@ -367,7 +370,42 @@ export default function ClearAndSeedPage() {
         await addDoc(collection(db, 'depenses'), cleanedData);
       }
 
+      // Créer des recettes pour les missions terminées
+      setProgress('💵 Création des recettes...');
+      const missionsTerminees = missions.filter((m: any) => m.statut === 'termine' && m.recette);
+      
+      // Récupérer les clients depuis Firestore pour avoir leurs noms
+      const clientsSnap = await getDocs(collection(db, 'clients'));
+      const clientsData = clientsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      
+      let recettesCount = 0;
+      for (const mission of missionsTerminees) {
+        const client = clientsData[Math.floor(Math.random() * clientsData.length)];
+        
+        const recetteData: any = {
+          type: 'mission',
+          date: mission.dateDebut,
+          montant: mission.recette,
+          description: `Mission ${mission.depart} → ${mission.destination}`,
+          client: client.nom || 'Client',
+          missionId: mission.id,
+          createdAt: mission.dateDebut,
+        };
+        
+        const cleanedData = removeUndefinedFields(recetteData);
+        await addDoc(collection(db, 'recettes'), cleanedData);
+        recettesCount++;
+      }
+
       setSuccess(true);
+      setSummary({
+        camions: 3,
+        chauffeurs: 5,
+        clients: clientsMaroc.length,
+        missions: 12,
+        depenses: 15,
+        recettes: recettesCount,
+      });
       setProgress('✅ Toutes les données ont été générées avec succès !');
       setTimeout(() => {
         router.push('/dashboard');
@@ -452,12 +490,22 @@ export default function ClearAndSeedPage() {
 
         {success && (
           <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mb-3">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <p className="text-sm sm:text-base font-semibold text-green-800">
                 {progress || 'Données générées avec succès ! Redirection...'}
               </p>
             </div>
+            {summary && (
+              <div className="text-sm sm:text-base text-green-700 space-y-1">
+                <p>✓ {summary.camions} camions</p>
+                <p>✓ {summary.chauffeurs} chauffeurs</p>
+                <p>✓ {summary.clients} clients</p>
+                <p>✓ {summary.missions} missions</p>
+                <p>✓ {summary.depenses} dépenses</p>
+                {summary.recettes && <p>✓ {summary.recettes} recettes</p>}
+              </div>
+            )}
           </div>
         )}
 

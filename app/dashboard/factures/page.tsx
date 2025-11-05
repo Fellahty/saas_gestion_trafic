@@ -3,8 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase.config';
-import { Facture, Client, LigneFacture, Reglement } from '@/lib/types';
-import { Plus, Edit, Trash2, Download, FileText, Search, Filter, X, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { Facture, Client, LigneFacture, Reglement, Mission, Recette } from '@/lib/types';
+import { Plus, Edit, Trash2, Download, FileText, Search, Filter, X, CheckCircle2, Clock, AlertCircle, Zap, Loader2 } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -21,6 +21,9 @@ export default function FacturesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatut, setFilterStatut] = useState<string>('all');
   const [filterClient, setFilterClient] = useState<string>('all');
+  const [generating, setGenerating] = useState(false);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [recettes, setRecettes] = useState<Recette[]>([]);
 
   useEffect(() => {
     loadData();
@@ -28,10 +31,12 @@ export default function FacturesPage() {
 
   const loadData = async () => {
     try {
-      const [facturesSnap, clientsSnap, reglementsSnap] = await Promise.all([
+      const [facturesSnap, clientsSnap, reglementsSnap, missionsSnap, recettesSnap] = await Promise.all([
         getDocs(query(collection(db, 'factures'), orderBy('dateEmission', 'desc'))),
         getDocs(collection(db, 'clients')),
         getDocs(collection(db, 'reglements')),
+        getDocs(collection(db, 'missions')),
+        getDocs(collection(db, 'recettes')),
       ]);
 
       setFactures(facturesSnap.docs.map(doc => ({ 
@@ -56,6 +61,27 @@ export default function FacturesPage() {
         date: doc.data().date?.toDate() || new Date(),
         createdAt: doc.data().createdAt?.toDate() || new Date(),
       } as Reglement)));
+
+      setMissions(missionsSnap.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          dateDebut: data.dateDebut?.toDate() || new Date(),
+          dateFin: data.dateFin?.toDate(),
+          createdAt: data.createdAt?.toDate() || new Date(),
+        } as Mission;
+      }));
+
+      setRecettes(recettesSnap.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: data.date?.toDate() || new Date(),
+          createdAt: data.createdAt?.toDate() || new Date(),
+        } as Recette;
+      }));
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -69,6 +95,130 @@ export default function FacturesPage() {
     const existingFactures = factures.filter(f => f.numero.startsWith(`FACT-${year}-`));
     const nextNumber = existingFactures.length + 1;
     return `FACT-${year}-${String(nextNumber).padStart(4, '0')}`;
+  };
+
+  // Générer des factures automatiquement à partir des missions terminées
+  const handleGenerateFacturesFromMissions = async () => {
+    if (!confirm('Générer des factures pour toutes les missions terminées sans facture ?')) {
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      // Récupérer les missions terminées qui n'ont pas encore de facture
+      const missionsTerminees = missions.filter(m => {
+        // Vérifier que la mission est terminée
+        if (m.statut !== 'termine') return false;
+        
+        // Vérifier qu'elle a une recette
+        if (!m.recette || m.recette <= 0) return false;
+        
+        // Vérifier qu'elle n'a pas déjà de facture
+        const factureExistante = factures.find(f => f.missionId === m.id);
+        if (factureExistante) {
+          console.log(`Mission ${m.id} (${m.depart} → ${m.destination}) a déjà une facture: ${factureExistante.numero}`);
+          return false;
+        }
+        
+        return true;
+      });
+
+      if (missionsTerminees.length === 0) {
+        alert('Aucune mission terminée sans facture trouvée. Toutes les missions terminées ont déjà une facture.');
+        setGenerating(false);
+        return;
+      }
+
+      // Afficher un message avec le nombre de factures à créer
+      const message = `Générer ${missionsTerminees.length} facture(s) pour les missions suivantes ?\n\n` +
+        missionsTerminees.map(m => `- ${m.depart} → ${m.destination} (${formatCurrency(m.recette || 0)})`).join('\n');
+      
+      if (!confirm(message)) {
+        setGenerating(false);
+        return;
+      }
+
+      let facturesCreees = 0;
+      const year = new Date().getFullYear();
+      let factureNumber = factures.length + 1;
+
+      for (const mission of missionsTerminees) {
+        // Trouver le client via les recettes (si la recette a un clientId)
+        let client: Client | undefined;
+        
+        // Chercher la recette associée à cette mission
+        const recetteMission = recettes.find(r => r.missionId === mission.id);
+        
+        if (recetteMission && recetteMission.clientId) {
+          // Trouver le client par ID dans la recette
+          client = clients.find(c => c.id === recetteMission.clientId);
+        }
+
+        // Si pas trouvé, utiliser le premier client disponible
+        if (!client && clients.length > 0) {
+          client = clients[0];
+        }
+
+        if (!client) {
+          console.warn(`Aucun client trouvé pour la mission ${mission.id}`);
+          continue;
+        }
+
+        // Calculer les montants depuis la recette de la mission
+        const montantRecette = mission.recette || 0;
+        const tva = 20; // TVA de 20% au Maroc
+        const totalHT = montantRecette / (1 + tva / 100);
+        const totalTVA = montantRecette - totalHT;
+        const totalTTC = montantRecette;
+
+        // Créer la ligne de facture
+        const lignes: LigneFacture[] = [{
+          description: `Transport ${mission.depart} → ${mission.destination}`,
+          quantite: 1,
+          prixUnitaire: totalHT,
+          tva: tva,
+          remise: 0,
+          total: totalHT,
+        }];
+
+        // Calculer la date d'échéance (30 jours après la date de fin de mission)
+        const dateEmission = mission.dateFin || mission.dateDebut;
+        const dateEcheance = new Date(dateEmission);
+        dateEcheance.setDate(dateEcheance.getDate() + 30);
+
+        // Créer la facture
+        const factureData = {
+          numero: `FACT-${year}-${String(factureNumber++).padStart(4, '0')}`,
+          clientId: client.id,
+          dateEmission: Timestamp.fromDate(dateEmission),
+          dateEcheance: Timestamp.fromDate(dateEcheance),
+          statut: 'envoyee' as const,
+          type: 'facture' as const,
+          lignes,
+          totalHT,
+          totalTVA,
+          totalTTC,
+          montantPaye: 0,
+          montantRestant: totalTTC,
+          notes: `Facture générée automatiquement depuis la mission ${mission.depart} → ${mission.destination}`,
+          conditionsPaiement: '30 jours',
+          missionId: mission.id,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        };
+
+        await addDoc(collection(db, 'factures'), factureData);
+        facturesCreees++;
+      }
+
+      alert(`${facturesCreees} facture(s) générée(s) avec succès !`);
+      await loadData();
+    } catch (error) {
+      console.error('Error generating factures:', error);
+      alert('Erreur lors de la génération des factures');
+    } finally {
+      setGenerating(false);
+    }
   };
 
   // Factures filtrées et recherchées
@@ -158,19 +308,41 @@ export default function FacturesPage() {
     <div className="w-full max-w-full overflow-x-hidden space-y-3 sm:space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Factures</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <FileText className="text-primary-600" />
+            Factures
+          </h1>
           <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Créez et gérez vos factures</p>
         </div>
-        <button
-          onClick={() => {
-            setSelectedFacture(null);
-            setShowForm(true);
-          }}
-          className="flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 sm:py-2.5 rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
-        >
-          <Plus size={18} />
-          <span>Nouvelle facture</span>
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={handleGenerateFacturesFromMissions}
+            disabled={generating}
+            className="flex items-center justify-center space-x-2 bg-green-600 text-white px-4 py-2 sm:py-2.5 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {generating ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                <span>Génération...</span>
+              </>
+            ) : (
+              <>
+                <Zap size={18} />
+                <span>Générer depuis missions</span>
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => {
+              setSelectedFacture(null);
+              setShowForm(true);
+            }}
+            className="flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 sm:py-2.5 rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
+          >
+            <Plus size={18} />
+            <span>Nouvelle facture</span>
+          </button>
+        </div>
       </div>
 
       {/* Statistiques */}

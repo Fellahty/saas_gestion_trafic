@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase.config';
 import { Mission, Camion, Chauffeur } from '@/lib/types';
-import { Plus, Edit, Trash2, MapPin, CheckCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, MapPin, CheckCircle, Map, Filter } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
+import MissionMap from '@/components/MissionMap';
 
 export default function TrajetsPage() {
   const [missions, setMissions] = useState<Mission[]>([]);
@@ -14,6 +15,10 @@ export default function TrajetsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [filterCamion, setFilterCamion] = useState<string>('all');
+  const [filterChauffeur, setFilterChauffeur] = useState<string>('all');
+  const [filterStatut, setFilterStatut] = useState<string>('all');
 
   useEffect(() => {
     loadData();
@@ -27,7 +32,16 @@ export default function TrajetsPage() {
         getDocs(collection(db, 'chauffeurs')),
       ]);
 
-      setMissions(missionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Mission)));
+      setMissions(missionsSnap.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          dateDebut: data.dateDebut instanceof Timestamp ? data.dateDebut.toDate() : (data.dateDebut ? new Date(data.dateDebut) : new Date()),
+          dateFin: data.dateFin instanceof Timestamp ? data.dateFin.toDate() : (data.dateFin ? new Date(data.dateFin) : undefined),
+          createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toDate() : (data.createdAt ? new Date(data.createdAt) : new Date()),
+        } as Mission;
+      }));
       setCamions(camionsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Camion)));
       setChauffeurs(chauffeursSnap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Chauffeur)));
     } catch (error) {
@@ -62,6 +76,14 @@ export default function TrajetsPage() {
     }
   };
 
+  // Filtrer les missions selon les filtres sélectionnés
+  const filteredMissions = missions.filter(mission => {
+    if (filterCamion !== 'all' && mission.camionId !== filterCamion) return false;
+    if (filterChauffeur !== 'all' && mission.chauffeurId !== filterChauffeur) return false;
+    if (filterStatut !== 'all' && mission.statut !== filterStatut) return false;
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -77,19 +99,100 @@ export default function TrajetsPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Trajets / Missions</h1>
           <p className="text-gray-600 mt-1 sm:mt-2 text-sm sm:text-base">Gérez vos missions et trajets</p>
         </div>
-        <button
-          onClick={() => {
-            setSelectedMission(null);
-            setShowForm(true);
-          }}
-          className="flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 sm:py-2.5 rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
-        >
-          <Plus size={18} />
-          <span>Nouvelle mission</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Toggle View Mode */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Liste
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1.5 ${
+                viewMode === 'map'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Map size={16} />
+              Carte
+            </button>
+          </div>
+          <button
+            onClick={() => {
+              setSelectedMission(null);
+              setShowForm(true);
+            }}
+            className="flex items-center justify-center space-x-2 bg-primary-600 text-white px-4 py-2 sm:py-2.5 rounded-lg hover:bg-primary-700 transition-colors text-sm sm:text-base w-full sm:w-auto"
+          >
+            <Plus size={18} />
+            <span>Nouvelle mission</span>
+          </button>
+        </div>
       </div>
 
+      {/* Filtres */}
+      <div className="bg-white rounded-lg shadow p-3 sm:p-4 border border-gray-200">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Filter className="w-4 h-4 text-gray-500" />
+            <span className="text-xs sm:text-sm font-medium text-gray-700">Filtres :</span>
+          </div>
+          <select
+            value={filterCamion}
+            onChange={(e) => setFilterCamion(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 flex-1 sm:flex-none sm:min-w-[150px]"
+          >
+            <option value="all">Tous les camions</option>
+            {camions.map(camion => (
+              <option key={camion.id} value={camion.id}>{camion.matricule}</option>
+            ))}
+          </select>
+          <select
+            value={filterChauffeur}
+            onChange={(e) => setFilterChauffeur(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 flex-1 sm:flex-none sm:min-w-[150px]"
+          >
+            <option value="all">Tous les chauffeurs</option>
+            {chauffeurs.map(chauffeur => (
+              <option key={chauffeur.id} value={chauffeur.id}>{chauffeur.prenom} {chauffeur.nom}</option>
+            ))}
+          </select>
+          <select
+            value={filterStatut}
+            onChange={(e) => setFilterStatut(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 flex-1 sm:flex-none sm:min-w-[150px]"
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="planifie">Planifié</option>
+            <option value="en_cours">En cours</option>
+            <option value="termine">Terminé</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Map View */}
+      {viewMode === 'map' && (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <MissionMap
+            missions={filteredMissions}
+            selectedMission={selectedMission}
+            onMissionSelect={(mission) => {
+              setSelectedMission(mission);
+              setShowForm(true);
+            }}
+          />
+        </div>
+      )}
+
       {/* Missions List */}
+      {viewMode === 'list' && (
       <div className="bg-white rounded-lg shadow overflow-hidden">
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
@@ -107,7 +210,7 @@ export default function TrajetsPage() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {missions.map((mission) => {
+                {filteredMissions.map((mission) => {
                   const camion = camions.find(c => c.id === mission.camionId);
                   const chauffeur = chauffeurs.find(c => c.id === mission.chauffeurId);
                   const coutEstime = mission.coutEstime.carburant + mission.coutEstime.peage + mission.coutEstime.repas + mission.coutEstime.autre;
@@ -188,6 +291,7 @@ export default function TrajetsPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* Form Modal */}
       {showForm && (

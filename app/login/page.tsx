@@ -72,41 +72,50 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-4 relative overflow-hidden">
-      {/* Animated background blobs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-primary-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-300 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000"></div>
+    <div className="min-h-screen flex items-center justify-center p-3 sm:p-4 md:p-6 relative overflow-hidden">
+      {/* Background Image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/images/truck.png"
+          alt="Background"
+          fill
+          priority
+          className="object-cover"
+          quality={90}
+        />
+        {/* Dark overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/80 via-blue-900/75 to-slate-800/80"></div>
+        {/* Subtle animated gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-transparent to-blue-800/20 animate-pulse"></div>
       </div>
 
       {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8">
+      <div className="relative z-10 w-full max-w-md flex flex-col items-center">
+        <div className="bg-white/90 backdrop-blur-xl rounded-xl sm:rounded-2xl shadow-2xl border border-white/30 p-5 sm:p-6 md:p-8 backdrop-saturate-150 w-full">
           {/* Logo */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative w-32 h-32 sm:w-36 sm:h-36 bg-gradient-to-br from-primary-700 via-primary-800 to-blue-900 rounded-2xl p-4 shadow-lg flex items-center justify-center mb-4">
+          <div className="flex flex-col items-center mb-6 sm:mb-8">
+            <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 bg-gradient-to-br from-primary-700 via-primary-800 to-blue-900 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg flex items-center justify-center mb-3 sm:mb-4">
               {!logoError ? (
                 <Image
                   src="/images/logo_w.png"
                   alt="FleetManager Logo"
                   width={128}
                   height={128}
-                  className="brightness-0 invert"
+                  className="brightness-0 invert w-full h-full object-contain"
                   priority
                   onError={() => setLogoError(true)}
                 />
               ) : (
-                <Truck className="w-16 h-16 text-white" />
+                <Truck className="w-12 h-12 sm:w-16 sm:h-16 text-white" />
               )}
             </div>
           </div>
 
           {/* Title */}
-          <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-primary-600 to-blue-600 bg-clip-text text-transparent">
+          <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2 bg-gradient-to-r from-primary-600 to-blue-600 bg-clip-text text-transparent">
             {isLogin ? 'Connexion' : 'Créer un compte'}
           </h1>
-          <p className="text-center text-gray-600 mb-8">
+          <p className="text-center text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base">
             {isLogin ? 'Accédez à votre tableau de bord' : 'Créez votre compte administrateur'}
           </p>
 
@@ -115,10 +124,10 @@ export default function LoginPage() {
             <div
               role="alert"
               aria-live="polite"
-              className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3"
+              className="mb-5 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 sm:gap-3"
             >
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <p className="text-sm text-red-800">{error}</p>
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <p className="text-xs sm:text-sm text-red-800">{error}</p>
             </div>
           )}
 
@@ -131,14 +140,14 @@ export default function LoginPage() {
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <User className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" aria-hidden="true" />
                   </div>
                   <input
                     id="name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+                    className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
                     placeholder="Votre nom"
                     autoComplete="name"
                     aria-required="true"
@@ -154,14 +163,14 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  <Mail className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+                  className="w-full pl-9 sm:pl-10 pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
                   placeholder="votre@email.com"
                   autoComplete="email"
                   required
@@ -178,14 +187,14 @@ export default function LoginPage() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" aria-hidden="true" />
+                  <Lock className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
+                  className="w-full pl-9 sm:pl-10 pr-11 sm:pr-12 py-2.5 sm:py-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors"
                   placeholder="••••••••"
                   autoComplete={isLogin ? 'current-password' : 'new-password'}
                   required
@@ -201,9 +210,9 @@ export default function LoginPage() {
                   aria-pressed={showPassword}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" aria-hidden="true" />
+                    <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 hover:text-gray-600" aria-hidden="true" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" aria-hidden="true" />
+                    <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 hover:text-gray-600" aria-hidden="true" />
                   )}
                 </button>
               </div>
@@ -212,12 +221,12 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-primary-600 to-blue-600 text-white py-3 rounded-lg font-medium hover:from-primary-700 hover:to-blue-700 transition-all duration-200 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-primary-600 to-blue-600 text-white py-2.5 sm:py-3 rounded-lg font-medium text-sm sm:text-base hover:from-primary-700 hover:to-blue-700 transition-all duration-200 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               aria-busy={loading}
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
+                  <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" aria-hidden="true" />
                   <span>Chargement...</span>
                 </>
               ) : (
@@ -227,7 +236,7 @@ export default function LoginPage() {
           </form>
 
           {/* Toggle Login/Signup */}
-          <div className="mt-6 text-center">
+          <div className="mt-5 sm:mt-6 text-center">
             <button
               type="button"
               onClick={() => {
@@ -237,7 +246,7 @@ export default function LoginPage() {
                 setPassword('');
                 setName('');
               }}
-              className="text-sm text-primary-600 hover:text-primary-700 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 rounded px-2 py-1"
+              className="text-xs sm:text-sm text-primary-600 hover:text-primary-700 font-medium focus:outline-none focus:ring-2 focus:ring-primary-500 rounded px-2 py-1"
               aria-label={isLogin ? 'Passer à la création de compte' : 'Passer à la connexion'}
             >
               {isLogin ? 'Pas encore de compte ? Créer un compte' : 'Déjà un compte ? Se connecter'}
@@ -245,14 +254,14 @@ export default function LoginPage() {
           </div>
 
           {!isLogin && (
-            <p className="mt-4 text-xs text-center text-gray-500">
+            <p className="mt-3 sm:mt-4 text-xs text-center text-gray-500 px-2">
               Le premier compte créé sera automatiquement administrateur
             </p>
           )}
         </div>
 
         {/* Footer */}
-        <p className="text-center text-gray-600 text-sm mt-8">
+        <p className="text-center text-white/90 text-xs sm:text-sm mt-6 sm:mt-8 font-light backdrop-blur-sm bg-white/5 rounded-full px-4 py-2">
           © {new Date().getFullYear()} FleetManager. Tous droits réservés.
         </p>
       </div>

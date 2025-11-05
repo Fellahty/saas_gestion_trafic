@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: false, // Désactivé temporairement pour éviter les double-renders en dev
-  // Optimisations pour le développement
-  swcMinify: true,
   // Configuration Turbopack vide (requis pour Next.js 16)
   turbopack: {},
   // Configuration Webpack pour compatibilité

@@ -1,0 +1,9 @@
+npm WARN cli npm v9.6.2 does not support Node.js v16.0.0. You should probably upgrade to a
+npm WARN cli newer version of node as we can't make any promises that npm will work with this
+npm WARN cli version. This version of npm supports the following node versions: `^14.17.0 ||
+npm WARN cli ^16.13.0 || >=18.0.0`. You can find the latest version at https://nodejs.org/.
+
+> saas-gestion-traffic@1.0.0 build
+> next build
+
+You are using Node.js 16.0.0. For Next.js, Node.js version ">=20.9.0" is required.

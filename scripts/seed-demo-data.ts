@@ -147,8 +147,8 @@ export async function seedDemoData() {
 
       const chauffeurRef = await addDoc(collection(db, 'chauffeurs'), {
         ...chauffeurData,
-        dateObtentionPermis: Timestamp.fromDate(chauffeurData.dateObtentionPermis),
-        dateEmbauche: Timestamp.fromDate(chauffeurData.dateEmbauche),
+        dateObtentionPermis: Timestamp.fromDate(chauffeurData.dateObtentionPermis!),
+        dateEmbauche: Timestamp.fromDate(chauffeurData.dateEmbauche!),
         createdAt: Timestamp.fromDate(chauffeurData.createdAt),
       });
       
@@ -381,11 +381,9 @@ export async function seedDemoData() {
       const date = mission.dateDebut;
       
       const recetteData: Omit<Recette, 'id'> = {
-        type: 'mission',
         date,
         montant: mission.recette!,
         description: `Mission ${mission.depart} → ${mission.destination}`,
-        client: client.nom,
         missionId: mission.id,
         createdAt: date,
       };
@@ -451,7 +449,7 @@ export async function seedDemoData() {
       await addDoc(collection(db, 'factures'), {
         ...factureData,
         dateEmission: Timestamp.fromDate(factureData.dateEmission),
-        dateEcheance: Timestamp.fromDate(factureData.dateEcheance),
+        dateEcheance: factureData.dateEcheance ? Timestamp.fromDate(factureData.dateEcheance) : undefined,
         createdAt: Timestamp.fromDate(factureData.createdAt),
         updatedAt: Timestamp.fromDate(factureData.updatedAt),
       });

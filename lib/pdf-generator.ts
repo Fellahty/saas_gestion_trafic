@@ -9,12 +9,12 @@ export async function generateFacturePDF(facture: Facture, client: Client): Prom
   const doc = new jsPDF();
   
   // Colors
-  const primaryColor = [14, 165, 233]; // Primary blue
-  const darkColor = [31, 41, 55]; // Dark gray
-  const lightGray = [243, 244, 246];
+  const primaryColor: [number, number, number] = [14, 165, 233]; // Primary blue
+  const darkColor: [number, number, number] = [31, 41, 55]; // Dark gray
+  const lightGray: [number, number, number] = [243, 244, 246];
 
   // Header
-  doc.setFillColor(...primaryColor);
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.rect(0, 0, 210, 50, 'F');
   
   // Logo/Company name
@@ -37,7 +37,7 @@ export async function generateFacturePDF(facture: Facture, client: Client): Prom
   }
   
   // Client info
-  doc.setTextColor(...darkColor);
+  doc.setTextColor(darkColor[0], darkColor[1], darkColor[2]);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
   doc.text('Facturé à:', 20, 65);
@@ -117,7 +117,7 @@ export async function generateFacturePDF(facture: Facture, client: Client): Prom
   
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(12);
-  doc.setFillColor(...primaryColor);
+  doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.rect(140, totalsY + 12, 60, 10, 'F');
   doc.setTextColor(255, 255, 255);
   doc.text('Total TTC:', 150, totalsY + 19, { align: 'right' });
@@ -125,7 +125,7 @@ export async function generateFacturePDF(facture: Facture, client: Client): Prom
 
   // Payment info
   if (facture.montantPaye > 0) {
-    doc.setTextColor(...darkColor);
+    doc.setTextColor(darkColor[0], darkColor[1], darkColor[2]);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.text(`Montant payé: ${formatCurrency(facture.montantPaye)}`, 20, totalsY + 25);
@@ -138,7 +138,7 @@ export async function generateFacturePDF(facture: Facture, client: Client): Prom
 
   // Conditions
   if (facture.conditionsPaiement || facture.notes) {
-    doc.setTextColor(...darkColor);
+    doc.setTextColor(darkColor[0], darkColor[1], darkColor[2]);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
     let noteY = totalsY + 40;
@@ -153,7 +153,7 @@ export async function generateFacturePDF(facture: Facture, client: Client): Prom
 
   // Footer
   const pageHeight = doc.internal.pageSize.height;
-  doc.setDrawColor(...primaryColor);
+  doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.setLineWidth(0.5);
   doc.line(20, pageHeight - 30, 190, pageHeight - 30);
   

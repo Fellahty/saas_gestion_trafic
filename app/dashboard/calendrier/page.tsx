@@ -5,7 +5,7 @@ import { collection, onSnapshot, QuerySnapshot, DocumentData, Timestamp } from '
 import { db } from '@/firebase.config';
 import { Mission, VisiteTechnique, Assurance, Entretien, Absence, Camion, Chauffeur } from '@/lib/types';
 import { Calendar, ChevronLeft, ChevronRight, Truck, Shield, Wrench, MapPin, Users, Filter, Grid, List } from 'lucide-react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek, addDays, isToday, getDay } from 'date-fns';
+import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, addDays, subDays, startOfWeek, endOfWeek, isToday, getDay } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import Link from 'next/link';

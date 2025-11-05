@@ -1,0 +1,185 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to get user role (with error handling)
+    function getUserRole() {
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(userPath) ? get(userPath).data.role : null;
+    }
+    
+    // Helper function to check if user is admin
+    // Allow access if user is authenticated (fallback for first-time users)
+    function isAdmin() {
+      return isAuthenticated() && (
+        getUserRole() == 'admin' || 
+        getUserRole() == null
+      );
+    }
+    
+    // Helper function to check if user is comptable
+    function isComptable() {
+      return isAuthenticated() && getUserRole() == 'comptable';
+    }
+    
+    // Helper function to check if user is magasinier
+    function isMagasinier() {
+      return isAuthenticated() && getUserRole() == 'magasinier';
+    }
+    
+    // Helper function to check if user is chauffeur
+    function isChauffeur() {
+      return isAuthenticated() && getUserRole() == 'chauffeur';
+    }
+    
+    // Helper: Allow authenticated users to read (for first-time access)
+    function canRead() {
+      return isAuthenticated();
+    }
+    
+    // Helper: Allow admin or authenticated users to write (for first-time setup)
+    function canWrite() {
+      return isAuthenticated() && (isAdmin() || getUserRole() == null);
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
+      
+      // Only admins can update user roles
+      // Users can create their own profile on signup
+      allow create: if isAuthenticated() && (request.auth.uid == userId);
+      allow update: if isAuthenticated() && (request.auth.uid == userId && !('role' in request.resource.data.diff(resource.data).changedKeys())) || isAdmin();
+      allow delete: if isAdmin();
+    }
+    
+    // Camions collection
+    match /camions/{camionId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || isMagasinier() || getUserRole() == null);
+      allow write: if canWrite() || (isAdmin() || (isComptable() && getUserRole() != null) || (isMagasinier() && getUserRole() != null));
+    }
+    
+    // Chauffeurs collection
+    match /chauffeurs/{chauffeurId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || isMagasinier() || isChauffeur() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin();
+    }
+    
+    // Missions collection
+    match /missions/{missionId} {
+      allow read: if canRead() && (
+        isAdmin() || 
+        isComptable() || 
+        isChauffeur() ||
+        getUserRole() == null ||
+        (isChauffeur() && resource.data.chauffeurId == request.auth.uid)
+      );
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+    
+    // Depenses collection
+    match /depenses/{depenseId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+    
+    // Recettes collection
+    match /recettes/{recetteId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+    
+    // Stock collection
+    match /stock/{stockId} {
+      allow read: if canRead() && (isAdmin() || isMagasinier() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isMagasinier();
+    }
+    
+    // Mouvements Stock
+    match /mouvementsStock/{mouvementId} {
+      allow read: if canRead() && (isAdmin() || isMagasinier() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isMagasinier();
+    }
+    
+    // Assurances
+    match /assurances/{assuranceId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin();
+    }
+    
+    // Visites Techniques
+    match /visitesTechniques/{visiteId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin();
+    }
+    
+    // Entretiens
+    match /entretiens/{entretienId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin();
+    }
+    
+    // Absences
+    match /absences/{absenceId} {
+      allow read: if canRead() && (
+        isAdmin() || 
+        isComptable() || 
+        isChauffeur() ||
+        getUserRole() == null ||
+        (isChauffeur() && resource.data.chauffeurId == request.auth.uid)
+      );
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+    
+    // Factures collection
+    match /factures/{factureId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+    
+    // Clients collection
+    match /clients/{clientId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+    
+    // Reglements collection
+    match /reglements/{reglementId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+
+    // Configuration des alertes
+    // Tous les utilisateurs authentifiés peuvent lire (pour calculer les alertes)
+    // Seuls les admins peuvent modifier
+    match /configAlertes/{configId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin() || (isAuthenticated() && getUserRole() == null);
+    }
+
+    // Kilométrages
+    match /kilometrages/{kilometrageId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+
+    // Pneus
+    match /pneus/{pneuId} {
+      allow read: if canRead() && (isAdmin() || isMagasinier() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isMagasinier();
+    }
+
+    // Réparations
+    match /reparations/{reparationId} {
+      allow read: if canRead() && (isAdmin() || isComptable() || getUserRole() == null);
+      allow write: if canWrite() || isAdmin() || isComptable();
+    }
+  }
+}

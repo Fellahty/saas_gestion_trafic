@@ -376,7 +376,7 @@ export default function ClearAndSeedPage() {
       
       // Récupérer les clients depuis Firestore pour avoir leurs noms
       const clientsSnap = await getDocs(collection(db, 'clients'));
-      const clientsData = clientsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const clientsData: any[] = clientsSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       
       let recettesCount = 0;
       for (const mission of missionsTerminees) {
@@ -387,7 +387,8 @@ export default function ClearAndSeedPage() {
           date: mission.dateDebut,
           montant: mission.recette,
           description: `Mission ${mission.depart} → ${mission.destination}`,
-          client: client.nom || 'Client',
+          client: (client as any)?.nom || 'Client',
+          clientId: client?.id,
           missionId: mission.id,
           createdAt: mission.dateDebut,
         };

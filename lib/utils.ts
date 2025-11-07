@@ -5,13 +5,35 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatDate(date: Date | string | number): string {
-  const d = new Date(date);
-  return d.toLocaleDateString('fr-FR', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+export function formatDate(date: Date | string | number | any): string {
+  // Handle Firestore Timestamp
+  if (date && typeof date === 'object' && 'toDate' in date && typeof date.toDate === 'function') {
+    const d = date.toDate();
+    if (isNaN(d.getTime())) {
+      return 'Date invalide';
+    }
+    return d.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+  
+  // Handle Date object, string, or number
+  try {
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) {
+      return 'Date invalide';
+    }
+    return d.toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    console.error('Error formatting date:', date, error);
+    return 'Date invalide';
+  }
 }
 
 export function formatCurrency(amount: number): string {

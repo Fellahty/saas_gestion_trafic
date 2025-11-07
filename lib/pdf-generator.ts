@@ -20,12 +20,17 @@ interface CompanySettings {
 
 // Professional minimal color palette
 const colors = {
-  black: [0, 0, 0] as [number, number, number],
-  dark: [31, 41, 55] as [number, number, number], // Gray-800
-  gray: [107, 114, 128] as [number, number, number], // Gray-500
-  lightGray: [243, 244, 246] as [number, number, number], // Gray-100
-  border: [229, 231, 235] as [number, number, number], // Gray-200
-  accent: [37, 99, 235] as [number, number, number], // Blue-600 - used sparingly
+  black: [15, 23, 42] as [number, number, number], // Slate-900
+  dark: [30, 41, 59] as [number, number, number], // Slate-800
+  gray: [100, 116, 139] as [number, number, number], // Slate-500
+  lightGray: [241, 245, 249] as [number, number, number], // Slate-100
+  border: [226, 232, 240] as [number, number, number], // Slate-200
+  accent: [37, 99, 235] as [number, number, number], // Blue-600
+  accentDark: [30, 64, 175] as [number, number, number], // Blue-700
+  accentLight: [59, 130, 246] as [number, number, number], // Blue-500
+  honey: [250, 204, 21] as [number, number, number], // Amber-400
+  emerald: [16, 185, 129] as [number, number, number], // Emerald-500
+  rose: [244, 63, 94] as [number, number, number], // Rose-500
   white: [255, 255, 255] as [number, number, number],
 };
 
@@ -95,178 +100,214 @@ async function generateFacturePDFContent(facture: Facture, client: Client, previ
   // Load company settings and logo
   const companySettings = await loadCompanySettings();
   const logoBase64 = await loadLogoAsBase64();
-  const logoSize = 40;
-  const logoX = margin;
-  const logoY = 15;
+  const logoSize = 32;
+  const headerHeight = 78;
 
-  // ========== PROFESSIONAL HEADER SECTION ==========
-  // Clean white background
-  doc.setFillColor(...colors.white);
-  doc.rect(0, 0, pageWidth, 65, 'F');
+  // ========== HERO HEADER BAND ==========
+  doc.setFillColor(...colors.accentDark);
+  doc.rect(0, 0, pageWidth, headerHeight, 'F');
 
-  // Subtle top border line
-  doc.setDrawColor(...colors.border);
-  doc.setLineWidth(0.5);
-  doc.line(margin, 0, pageWidth - margin, 0);
+  doc.setFillColor(...colors.accent);
+  doc.setDrawColor(...colors.accent);
+  doc.triangle(
+    pageWidth * 0.55,
+    -20,
+    pageWidth + 10,
+    -20,
+    pageWidth + 10,
+    headerHeight + 10,
+    'F'
+  );
 
-  // Logo
+  doc.setFillColor(...colors.accentLight);
+  doc.triangle(
+    pageWidth * 0.7,
+    -10,
+    pageWidth + 20,
+    -10,
+    pageWidth * 0.85,
+    headerHeight - 15,
+    'F'
+  );
+
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, 'PNG', logoX, logoY, logoSize, logoSize * 0.5);
+      doc.addImage(logoBase64, 'PNG', margin, 18, logoSize, logoSize * 0.55);
     } catch (e) {
       console.warn('Could not load logo:', e);
     }
   }
 
-  // Company info next to logo
-  const companyInfoX = logoBase64 ? logoX + logoSize + 12 : margin;
-  doc.setTextColor(...colors.black);
-  doc.setFontSize(18);
+  // Header text
+  doc.setTextColor(...colors.white);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(companySettings.description, pageWidth / 2, headerHeight - 32, { align: 'center' });
+
+  doc.setFontSize(20);
   doc.setFont('helvetica', 'bold');
-  doc.text(companySettings.nom, companyInfoX, logoY + 8);
-  
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(...colors.gray);
-  doc.text(companySettings.description, companyInfoX, logoY + 15);
-  const companyContact = companySettings.pays + (companySettings.email ? ` • ${companySettings.email}` : '');
-  doc.text(companyContact, companyInfoX, logoY + 21);
+  doc.text(companySettings.nom, pageWidth / 2, headerHeight - 15, { align: 'center' });
 
-  // Invoice number and dates - right side
-  const rightInfoX = pageWidth - margin;
-  
-  // Invoice number - clean and minimal
-  doc.setTextColor(...colors.black);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FACTURE', rightInfoX, logoY + 5, { align: 'right' });
-  doc.setFontSize(11);
-  doc.setFont('helvetica', 'normal');
-  doc.text(`N° ${facture.numero}`, rightInfoX, logoY + 12, { align: 'right' });
+  // Invoice summary card (top-right)
+  const summaryCardWidth = 120;
+  const summaryCardX = pageWidth - margin - summaryCardWidth;
+  const summaryCardY = 18;
+  doc.setDrawColor(0, 0, 0, 0);
+  doc.setFillColor(...colors.white);
+  doc.roundedRect(summaryCardX, summaryCardY, summaryCardWidth, 58, 6, 6, 'F');
 
-  // Invoice dates - below invoice number
-  doc.setTextColor(...colors.gray);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  let dateY = logoY + 22;
-  doc.text(`Date d'émission: ${format(facture.dateEmission, 'dd MMMM yyyy', { locale: fr })}`, rightInfoX, dateY, { align: 'right' });
-  if (facture.dateEcheance) {
-    dateY += 5;
-    doc.text(`Date d'échéance: ${format(facture.dateEcheance, 'dd MMMM yyyy', { locale: fr })}`, rightInfoX, dateY, { align: 'right' });
-  }
-
-  // ========== COMPANY & CLIENT INFO SECTION ==========
-  let startY = 75;
-
-  // Clean divider line
   doc.setDrawColor(...colors.border);
-  doc.setLineWidth(0.3);
-  doc.line(margin, startY - 8, pageWidth - margin, startY - 8);
+  doc.roundedRect(summaryCardX, summaryCardY, summaryCardWidth, 58, 6, 6, 'S');
 
-  // Company info section - left side
-  const companyInfoWidth = (pageWidth / 2) - margin - 10;
+  doc.setTextColor(...colors.gray);
+  doc.setFont('helvetica', 'medium');
+  doc.setFontSize(8);
+  doc.text('FACTURE', summaryCardX + summaryCardWidth / 2, summaryCardY + 12, { align: 'center' });
+
   doc.setTextColor(...colors.black);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(`#${facture.numero}`, summaryCardX + summaryCardWidth / 2, summaryCardY + 20, { align: 'center' });
+
+  const summaryRows = [
+    { label: `Émission`, value: format(facture.dateEmission, 'dd MMM yyyy', { locale: fr }) },
+    { label: `Échéance`, value: facture.dateEcheance ? format(facture.dateEcheance, 'dd MMM yyyy', { locale: fr }) : '—' },
+  ];
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  let summaryRowY = summaryCardY + 32;
+  summaryRows.forEach(row => {
+    doc.setTextColor(...colors.gray);
+    doc.text(row.label, summaryCardX + summaryCardWidth / 2, summaryRowY, { align: 'center' });
+    doc.setTextColor(...colors.black);
+    doc.text(row.value, summaryCardX + summaryCardWidth / 2, summaryRowY + 6, { align: 'center' });
+    summaryRowY += 12;
+  });
+
+  const statusText = facture.statut === 'payee'
+    ? 'Payée'
+    : facture.statut === 'en_retard'
+      ? 'En retard'
+      : facture.statut === 'partiellement_payee'
+        ? 'Partiellement payée'
+        : facture.statut === 'annulee'
+          ? 'Annulée'
+          : facture.statut === 'envoyee'
+            ? 'Envoyée'
+            : 'Brouillon';
+
+  const statusColor = facture.statut === 'payee'
+    ? colors.emerald
+    : facture.statut === 'en_retard'
+      ? colors.rose
+      : colors.accentLight;
+
+  doc.setFillColor(...statusColor);
+  doc.setTextColor(...colors.white);
+  doc.roundedRect(summaryCardX + 12, summaryCardY + 46, summaryCardWidth - 24, 14, 6, 6, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.text(statusText.toUpperCase(), summaryCardX + summaryCardWidth / 2, summaryCardY + 55, { align: 'center' });
+
+  // Move past header
+  let startY = headerHeight + 12;
+
+  // ========== INFO CARDS ==========
+  const infoCardHeight = 54;
+  doc.setFillColor(...colors.white);
+  doc.setDrawColor(...colors.border);
+  doc.roundedRect(margin, startY, contentWidth, infoCardHeight, 8, 8, 'FD');
+
+  const dividerX = margin + contentWidth / 2;
+  doc.setDrawColor(...colors.border);
+  doc.line(dividerX, startY + 10, dividerX, startY + infoCardHeight - 10);
+
+  const columnPadding = 14;
+  const companyInfoX = margin + columnPadding;
+  const clientInfoX = dividerX + columnPadding;
+  const infoWidth = (contentWidth / 2) - (columnPadding * 2);
+
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  doc.text('ÉMETTEUR', margin, startY);
-  
+  doc.setTextColor(...colors.accentDark);
+  doc.text('ÉMETTEUR', companyInfoX, startY + 12);
+  doc.text('FACTURÉ À', clientInfoX, startY + 12);
+
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
   doc.setTextColor(...colors.dark);
-  let companyY = startY + 7;
-  
-  // Company name - wrap if too long
-  const companyNameLines = doc.splitTextToSize(companySettings.nom, companyInfoWidth);
-  doc.text(companyNameLines, margin, companyY);
-  companyY += 5 * companyNameLines.length;
-  
-  // Description - wrap if too long
-  const descLines = doc.splitTextToSize(companySettings.description, companyInfoWidth);
-  doc.text(descLines, margin, companyY);
-  companyY += 5 * descLines.length;
-  
-  if (companySettings.adresse) {
-    const addrLines = doc.splitTextToSize(companySettings.adresse, companyInfoWidth);
-    doc.text(addrLines, margin, companyY);
-    companyY += 5 * addrLines.length;
+  doc.setFontSize(8);
+
+  let companyY = startY + 20;
+  const drawMultiline = (text: string, x: number, y: number, width: number) => {
+    const lines = doc.splitTextToSize(text, width);
+    doc.text(lines, x, y);
+    return y + (lines.length * 4.4);
+  };
+
+  companyY = drawMultiline(companySettings.nom, companyInfoX, companyY, infoWidth);
+  if (companySettings.description) {
+    doc.setTextColor(...colors.gray);
+    companyY = drawMultiline(companySettings.description, companyInfoX, companyY, infoWidth);
+    doc.setTextColor(...colors.dark);
   }
-  
-  let locationParts: string[] = [];
-  if (companySettings.codePostal && companySettings.ville) {
-    locationParts.push(`${companySettings.codePostal} ${companySettings.ville}`);
-  } else if (companySettings.ville) {
-    locationParts.push(companySettings.ville);
+  if (companySettings.adresse) {
+    companyY = drawMultiline(companySettings.adresse, companyInfoX, companyY, infoWidth);
+  }
+  const companyLocation = [companySettings.codePostal, companySettings.ville].filter(Boolean).join(' ');
+  if (companyLocation) {
+    doc.setTextColor(...colors.gray);
+    companyY = drawMultiline(companyLocation, companyInfoX, companyY, infoWidth);
+    doc.setTextColor(...colors.dark);
   }
   if (companySettings.pays) {
-    locationParts.push(companySettings.pays);
+    companyY = drawMultiline(companySettings.pays, companyInfoX, companyY, infoWidth);
   }
-  if (locationParts.length > 0) {
-    const locationText = locationParts.join(', ');
-    const locationLines = doc.splitTextToSize(locationText, companyInfoWidth);
-    doc.text(locationLines, margin, companyY);
-    companyY += 5 * locationLines.length;
-  }
-  
-  doc.setTextColor(...colors.gray);
   if (companySettings.email) {
-    const emailLines = doc.splitTextToSize(companySettings.email, companyInfoWidth);
-    doc.text(emailLines, margin, companyY);
-    companyY += 5 * emailLines.length;
+    doc.setTextColor(...colors.gray);
+    companyY = drawMultiline(companySettings.email, companyInfoX, companyY, infoWidth);
   }
   if (companySettings.telephone) {
-    doc.text(`Tél: ${companySettings.telephone}`, margin, companyY);
+    doc.text(`Tél: ${companySettings.telephone}`, companyInfoX, companyY + 4);
   }
 
-  // Client info section - right side
-  const clientInfoX = pageWidth / 2 + 15;
-  const clientInfoWidth = pageWidth - margin - clientInfoX;
-  doc.setTextColor(...colors.black);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('FACTURÉ À', clientInfoX, startY);
-  
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+  let clientY = startY + 20;
   doc.setTextColor(...colors.dark);
-  let clientY = startY + 7;
-  
-  // Client name - wrap if too long
-  const clientNameLines = doc.splitTextToSize(client.nom, clientInfoWidth);
-  doc.text(clientNameLines, clientInfoX, clientY);
-  clientY += 5 * clientNameLines.length;
-  
+  clientY = drawMultiline(client.nom, clientInfoX, clientY, infoWidth);
   if (client.adresse) {
-    const addrLines = doc.splitTextToSize(client.adresse, clientInfoWidth);
-    doc.text(addrLines, clientInfoX, clientY);
-    clientY += 5 * addrLines.length;
+    clientY = drawMultiline(client.adresse, clientInfoX, clientY, infoWidth);
   }
-  
-  if (client.codePostal && client.ville) {
-    const locationText = `${client.codePostal} ${client.ville}`;
-    const locationLines = doc.splitTextToSize(locationText, clientInfoWidth);
-    doc.text(locationLines, clientInfoX, clientY);
-    clientY += 5 * locationLines.length;
+  const clientLocation = [client.codePostal, client.ville].filter(Boolean).join(' ');
+  if (clientLocation) {
+    doc.setTextColor(...colors.gray);
+    clientY = drawMultiline(clientLocation, clientInfoX, clientY, infoWidth);
+    doc.setTextColor(...colors.dark);
   }
-  
   if (client.pays) {
-    const paysLines = doc.splitTextToSize(client.pays, clientInfoWidth);
-    doc.text(paysLines, clientInfoX, clientY);
-    clientY += 5 * paysLines.length;
+    clientY = drawMultiline(client.pays, clientInfoX, clientY, infoWidth);
   }
-  
   if (client.email) {
     doc.setTextColor(...colors.gray);
-    const emailLines = doc.splitTextToSize(client.email, clientInfoWidth);
-    doc.text(emailLines, clientInfoX, clientY);
-    clientY += 5 * emailLines.length;
+    clientY = drawMultiline(client.email, clientInfoX, clientY, infoWidth);
   }
-  
   if (client.telephone) {
-    doc.text(`Tél: ${client.telephone}`, clientInfoX, clientY);
+    doc.text(`Tél: ${client.telephone}`, clientInfoX, clientY + 4);
   }
 
+  startY += infoCardHeight + 16;
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...colors.black);
+  doc.text('Détails de la facture', margin, startY);
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'medium');
+  doc.setTextColor(...colors.gray);
+  doc.text('Prestations et montants', margin, startY + 6);
+
   // ========== ITEMS TABLE ==========
-  const tableStartY = startY + 40;
+  const tableStartY = startY + 12;
   const tableWidth = contentWidth;
   const descriptionWidth = tableWidth - 18 - 32 - 22 - 22 - 32 - 20; // Total width minus other columns minus padding
 
@@ -298,34 +339,39 @@ async function generateFacturePDFContent(facture: Facture, client: Client, previ
       fillColor: colors.dark,
       textColor: [255, 255, 255],
       fontStyle: 'bold',
-      fontSize: 9,
-      cellPadding: 4,
-      halign: 'left',
+      fontSize: 8.5,
+      cellPadding: 3,
+      halign: 'center',
+      valign: 'middle',
     },
     bodyStyles: {
       textColor: colors.black,
-      fontSize: 8,
-      cellPadding: 4,
+      fontSize: 7.5,
+      cellPadding: 3,
       overflow: 'linebreak',
       cellWidth: 'wrap',
+      halign: 'center',
+      valign: 'middle',
     },
     alternateRowStyles: {
       fillColor: colors.white,
     },
     styles: {
-      cellPadding: 4,
+      cellPadding: 3,
       lineColor: colors.border,
       lineWidth: 0.2,
       overflow: 'linebreak',
       cellWidth: 'wrap',
+      halign: 'center',
+      valign: 'middle',
     },
     columnStyles: {
-      0: { cellWidth: descriptionWidth, halign: 'left', overflow: 'linebreak' },
-      1: { cellWidth: 18, halign: 'center' },
-      2: { cellWidth: 32, halign: 'right' },
-      3: { cellWidth: 22, halign: 'center' },
-      4: { cellWidth: 22, halign: 'center' },
-      5: { cellWidth: 32, halign: 'right', fontStyle: 'bold' },
+      0: { cellWidth: descriptionWidth, halign: 'left', overflow: 'linebreak', valign: 'middle' },
+      1: { cellWidth: 18, halign: 'center', valign: 'middle' },
+      2: { cellWidth: 32, halign: 'right', valign: 'middle' },
+      3: { cellWidth: 22, halign: 'center', valign: 'middle' },
+      4: { cellWidth: 22, halign: 'center', valign: 'middle' },
+      5: { cellWidth: 32, halign: 'right', fontStyle: 'bold', valign: 'middle' },
     },
     margin: { left: margin, right: margin },
   });
@@ -334,19 +380,19 @@ async function generateFacturePDFContent(facture: Facture, client: Client, previ
 
   // ========== TOTALS SECTION ==========
   const totalsStartY = finalY + 15;
-  const totalsBoxWidth = 85;
+  const totalsBoxWidth = 82;
   const totalsBoxX = pageWidth - margin - totalsBoxWidth;
 
   // Clean minimal totals box
   doc.setFillColor(...colors.white);
-  doc.rect(totalsBoxX, totalsStartY, totalsBoxWidth, 50, 'F');
+  doc.rect(totalsBoxX, totalsStartY, totalsBoxWidth, 46, 'F');
 
   // Subtle border
   doc.setDrawColor(...colors.border);
   doc.setLineWidth(0.3);
-  doc.rect(totalsBoxX, totalsStartY, totalsBoxWidth, 50, 'D');
+  doc.rect(totalsBoxX, totalsStartY, totalsBoxWidth, 46, 'D');
 
-  let totalsY = totalsStartY + 10;
+  let totalsY = totalsStartY + 9;
   
   // Total HT
   doc.setTextColor(...colors.black);
@@ -355,20 +401,20 @@ async function generateFacturePDFContent(facture: Facture, client: Client, previ
   doc.text('Total HT', totalsBoxX + 6, totalsY);
   doc.setFont('helvetica', 'bold');
   doc.text(formatCurrency(facture.totalHT), totalsBoxX + totalsBoxWidth - 6, totalsY, { align: 'right' });
-  totalsY += 8;
+  totalsY += 7;
 
   // Total TVA
   doc.setFont('helvetica', 'normal');
   doc.text('Total TVA', totalsBoxX + 6, totalsY);
   doc.setFont('helvetica', 'bold');
   doc.text(formatCurrency(facture.totalTVA), totalsBoxX + totalsBoxWidth - 6, totalsY, { align: 'right' });
-  totalsY += 10;
+  totalsY += 8;
 
   // Divider line
   doc.setDrawColor(...colors.border);
   doc.setLineWidth(0.3);
   doc.line(totalsBoxX + 6, totalsY, totalsBoxX + totalsBoxWidth - 6, totalsY);
-  totalsY += 8;
+  totalsY += 7;
 
   // Total TTC - clean and prominent
   doc.setTextColor(...colors.black);
@@ -380,7 +426,7 @@ async function generateFacturePDFContent(facture: Facture, client: Client, previ
 
   // ========== PAYMENT STATUS ==========
   if (facture.montantPaye > 0 || facture.montantRestant > 0) {
-    totalsY = totalsStartY + 55;
+    totalsY = totalsStartY + 52;
     doc.setTextColor(...colors.black);
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
@@ -397,42 +443,60 @@ async function generateFacturePDFContent(facture: Facture, client: Client, previ
   }
 
   // ========== NOTES & CONDITIONS ==========
-  let notesY = totalsStartY + 65;
+  let notesY = totalsStartY + 57;
   
   if (facture.conditionsPaiement || facture.notes) {
-    // Clean minimal background
+    const notePadding = 6;
+    let estimatedHeight = notePadding * 2;
+    const noteSections: { title: string; lines: string[] }[] = [];
+
+    if (facture.conditionsPaiement) {
+      noteSections.push({
+        title: 'Conditions de paiement',
+        lines: doc.splitTextToSize(facture.conditionsPaiement, contentWidth - notePadding * 2),
+      });
+    }
+
+    if (facture.notes) {
+      noteSections.push({
+        title: 'Notes',
+        lines: doc.splitTextToSize(facture.notes, contentWidth - notePadding * 2),
+      });
+    }
+
+    noteSections.forEach((section, index) => {
+      estimatedHeight += 4; // title spacing
+      estimatedHeight += section.lines.length * 4.2;
+      if (index < noteSections.length - 1) {
+        estimatedHeight += 3;
+      }
+    });
+
     doc.setFillColor(...colors.lightGray);
-    doc.rect(margin, notesY, contentWidth, 30, 'F');
-    
-    // Subtle border
+    doc.rect(margin, notesY, contentWidth, estimatedHeight, 'F');
+
     doc.setDrawColor(...colors.border);
     doc.setLineWidth(0.3);
-    doc.rect(margin, notesY, contentWidth, 30, 'D');
-    
-    doc.setTextColor(...colors.black);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'bold');
-    
-    let noteContentY = notesY + 7;
-    
-    if (facture.conditionsPaiement) {
-      doc.text('Conditions de paiement:', margin + 6, noteContentY);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colors.dark);
-      const conditionsLines = doc.splitTextToSize(facture.conditionsPaiement, contentWidth - 12);
-      doc.text(conditionsLines, margin + 6, noteContentY + 5);
-      noteContentY += 5 + (5 * conditionsLines.length);
-    }
-    
-    if (facture.notes) {
-      doc.setFont('helvetica', 'bold');
+    doc.rect(margin, notesY, contentWidth, estimatedHeight, 'D');
+
+    let noteContentY = notesY + notePadding;
+    noteSections.forEach((section, index) => {
       doc.setTextColor(...colors.black);
-      doc.text('Notes:', margin + 6, noteContentY);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(section.title + ':', margin + notePadding, noteContentY);
+      noteContentY += 4;
+
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...colors.dark);
-      const splitNotes = doc.splitTextToSize(facture.notes, contentWidth - 12);
-      doc.text(splitNotes, margin + 6, noteContentY + 5);
-    }
+      doc.setFontSize(7.5);
+      doc.text(section.lines, margin + notePadding, noteContentY);
+      noteContentY += section.lines.length * 4.2;
+
+      if (index < noteSections.length - 1) {
+        noteContentY += 3;
+      }
+    });
   }
 
   // ========== PROFESSIONAL FOOTER ==========

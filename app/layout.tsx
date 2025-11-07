@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import Analytics from '@/components/Analytics'
+import { Analytics as VercelAnalytics } from '@vercel/analytics/next'
 
 // Inter font - Standard pour SaaS professionnels (comme Notion, Linear, Vercel)
 const inter = Inter({ 
@@ -50,6 +51,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         {children}
         <Analytics />
+        <VercelAnalytics />
       </body>
     </html>
   )

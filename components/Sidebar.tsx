@@ -194,7 +194,13 @@ export default function Sidebar() {
                     alt="FleetManager"
                     width={32}
                     height={32}
-                    className="brightness-0 invert"
+                    className="brightness-0 invert object-contain"
+                    style={{ 
+                      width: 'auto', 
+                      height: 'auto',
+                      maxWidth: '100%', 
+                      maxHeight: '100%' 
+                    }}
                     priority
                     onError={() => setLogoError(true)}
                   />

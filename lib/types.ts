@@ -128,6 +128,7 @@ export interface Chauffeur {
   typeContrat: 'cdi' | 'cdd' | 'interim';
   salaire: number;
   dateEmbauche?: Date;
+  soldAnnuelConge?: number; // Nombre de jours de congé annuel
   actif: boolean;
   createdAt: Date;
 }

@@ -1,0 +1,14 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // TEMPORARY: Open rules for testing - allow all access
+    // WARNING: This is insecure - only use for testing!
+    // TODO: Restrict these rules for production
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+

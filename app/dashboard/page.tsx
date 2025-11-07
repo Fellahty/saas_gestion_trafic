@@ -233,7 +233,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden space-y-3 sm:space-y-4">
+    <div className="w-full max-w-full overflow-x-hidden space-y-3 sm:space-y-4 min-w-0">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex-1 min-w-0">
@@ -335,69 +335,69 @@ export default function DashboardPage() {
         <div role="tabpanel" id="panel-overview" aria-labelledby="tab-overview" tabIndex={0}>
           {/* Key Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 w-full max-w-full">
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">Chiffre d&apos;affaires</p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mt-1">
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6 overflow-hidden">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">Chiffre d&apos;affaires</p>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mt-1 break-words leading-tight">
                     {formatCurrency(metrics.totalRecettes)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1 truncate">
                     Marge: {metrics.marge.toFixed(1)}%
                   </p>
                 </div>
-                <div className="bg-blue-100 p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2">
+                <div className="bg-blue-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
                   <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">Bénéfice net</p>
-                  <p className={`text-lg sm:text-xl md:text-2xl font-bold mt-1 ${metrics.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6 overflow-hidden">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">Bénéfice net</p>
+                  <p className={`text-base sm:text-lg md:text-xl lg:text-2xl font-bold mt-1 break-words leading-tight ${metrics.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {formatCurrency(metrics.profit)}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1 truncate">
                     {todayStats.profit >= 0 ? '+' : ''}{formatCurrency(todayStats.profit)} aujourd&apos;hui
                   </p>
                 </div>
-                <div className={`p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2 ${metrics.profit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                <div className={`p-2 sm:p-3 rounded-lg flex-shrink-0 ${metrics.profit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
                   <DollarSign className={`w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 ${metrics.profit >= 0 ? 'text-green-600' : 'text-red-600'}`} />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">Camions actifs</p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mt-1">
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6 overflow-hidden">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">Camions actifs</p>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mt-1 break-words leading-tight">
                     {metrics.camionsActifs}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1 truncate">
                     Sur {metrics.camionsTotal} au total
                   </p>
                 </div>
-                <div className="bg-purple-100 p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2">
+                <div className="bg-purple-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
                   <Truck className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-purple-600" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs sm:text-sm text-gray-600 font-medium">Missions en cours</p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mt-1">
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-3 sm:p-4 md:p-6 overflow-hidden">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <p className="text-xs sm:text-sm text-gray-600 font-medium truncate">Missions en cours</p>
+                  <p className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mt-1 break-words leading-tight">
                     {metrics.missionsEnCours}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-gray-500 mt-1 truncate">
                     {metrics.missionsAujourdhui} aujourd&apos;hui
                   </p>
                 </div>
-                <div className="bg-orange-100 p-2 sm:p-3 rounded-lg flex-shrink-0 ml-2">
+                <div className="bg-orange-100 p-2 sm:p-3 rounded-lg flex-shrink-0">
                   <MapPin className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-orange-600" />
                 </div>
               </div>
@@ -491,7 +491,7 @@ export default function DashboardPage() {
                           )}
                         </div>
                         {mission.recette && (
-                          <p className="text-xs sm:text-sm font-medium text-green-600 mt-1">
+                          <p className="text-xs sm:text-sm font-medium text-green-600 mt-1 break-words">
                             {formatCurrency(mission.recette)}
                           </p>
                         )}
@@ -509,49 +509,49 @@ export default function DashboardPage() {
                 Résumé
               </h2>
               <div className="space-y-2 sm:space-y-3">
-                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <Truck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Camions</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">Camions</span>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs sm:text-sm font-bold text-gray-900">{metrics.camionsActifs}/{metrics.camionsTotal}</p>
-                    <p className="text-[10px] sm:text-xs text-gray-500">actifs</p>
+                  <div className="text-right min-w-0 flex-shrink-0 ml-2">
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 break-words">{metrics.camionsActifs}/{metrics.camionsTotal}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">actifs</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Chauffeurs</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">Chauffeurs</span>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs sm:text-sm font-bold text-gray-900">{metrics.chauffeursActifs}/{chauffeurs.length}</p>
-                    <p className="text-[10px] sm:text-xs text-gray-500">actifs</p>
+                  <div className="text-right min-w-0 flex-shrink-0 ml-2">
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 break-words">{metrics.chauffeursActifs}/{chauffeurs.length}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">actifs</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Missions</span>
+                    <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">Missions</span>
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs sm:text-sm font-bold text-gray-900">{metrics.missionsEnCours}/{metrics.missionsTotal}</p>
-                    <p className="text-[10px] sm:text-xs text-gray-500">en cours</p>
+                  <div className="text-right min-w-0 flex-shrink-0 ml-2">
+                    <p className="text-xs sm:text-sm font-bold text-gray-900 break-words">{metrics.missionsEnCours}/{metrics.missionsTotal}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">en cours</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
                     <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-                    <span className="text-xs sm:text-sm font-medium text-gray-700">Aujourd&apos;hui</span>  
+                    <span className="text-xs sm:text-sm font-medium text-gray-700 truncate">Aujourd&apos;hui</span>  
                   </div>
-                  <div className="text-right">
-                    <p className={`text-xs sm:text-sm font-bold ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div className="text-right min-w-0 flex-shrink-0 ml-2">
+                    <p className={`text-xs sm:text-sm font-bold break-words ${todayStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {todayStats.profit >= 0 ? '+' : ''}{formatCurrency(todayStats.profit)}
                     </p>
-                    <p className="text-[10px] sm:text-xs text-gray-500">bénéfice</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500 whitespace-nowrap">bénéfice</p>
                   </div>
                 </div>
               </div>
@@ -563,9 +563,9 @@ export default function DashboardPage() {
       {/* Finance Tab */}
       {activeTab === 'finance' && (
         <div role="tabpanel" id="panel-finance" aria-labelledby="tab-finance" tabIndex={0} className="space-y-4 w-full max-w-full">
-          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 w-full max-w-full">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Évolution financière</h2>
-            <div className="w-full max-w-full overflow-x-auto">
+          <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 w-full max-w-full overflow-hidden">
+            <h2 className="text-lg font-bold text-gray-900 mb-4 truncate">Évolution financière</h2>
+            <div className="w-full max-w-full overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
               <div className="min-w-[600px] w-full">
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={monthlyData}>
@@ -584,17 +584,17 @@ export default function DashboardPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-full">
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6">
-              <p className="text-sm text-gray-600">Total recettes</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{formatCurrency(metrics.totalRecettes)}</p>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 overflow-hidden">
+              <p className="text-sm text-gray-600 truncate">Total recettes</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mt-2 break-words leading-tight">{formatCurrency(metrics.totalRecettes)}</p>
             </div>
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6">
-              <p className="text-sm text-gray-600">Total dépenses</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 mt-2">{formatCurrency(metrics.totalDepenses)}</p>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 overflow-hidden">
+              <p className="text-sm text-gray-600 truncate">Total dépenses</p>
+              <p className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mt-2 break-words leading-tight">{formatCurrency(metrics.totalDepenses)}</p>
             </div>
-            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6">
-              <p className="text-sm text-gray-600">Bénéfice net</p>
-              <p className={`text-xl sm:text-2xl font-bold mt-2 ${metrics.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 overflow-hidden">
+              <p className="text-sm text-gray-600 truncate">Bénéfice net</p>
+              <p className={`text-lg sm:text-xl md:text-2xl font-bold mt-2 break-words leading-tight ${metrics.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                 {formatCurrency(metrics.profit)}
               </p>
             </div>
@@ -605,33 +605,33 @@ export default function DashboardPage() {
       {/* Operations Tab */}
       {activeTab === 'operations' && (
         <div role="tabpanel" id="panel-operations" aria-labelledby="tab-operations" tabIndex={0} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full max-w-full">
-          <Link href="/dashboard/camions" className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow w-full max-w-full">
-            <Truck className="w-8 h-8 text-primary-600 mb-3" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Camions</h3>
-            <p className="text-sm text-gray-600 mb-4">Gérez votre flotte de camions</p>
-            <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.camionsTotal}</span>
-              <span className="text-sm text-primary-600">Voir →</span>
+          <Link href="/dashboard/camions" className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow w-full max-w-full overflow-hidden">
+            <Truck className="w-8 h-8 text-primary-600 mb-3 flex-shrink-0" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">Camions</h3>
+            <p className="text-sm text-gray-600 mb-4 line-clamp-2">Gérez votre flotte de camions</p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 break-words">{metrics.camionsTotal}</span>
+              <span className="text-sm text-primary-600 flex-shrink-0">Voir →</span>
             </div>
           </Link>
 
-          <Link href="/dashboard/chauffeurs" className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow w-full max-w-full">
-            <Users className="w-8 h-8 text-primary-600 mb-3" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Chauffeurs</h3>
-            <p className="text-sm text-gray-600 mb-4">Gérez vos chauffeurs</p>
-            <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">{chauffeurs.length}</span>
-              <span className="text-sm text-primary-600">Voir →</span>
+          <Link href="/dashboard/chauffeurs" className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow w-full max-w-full overflow-hidden">
+            <Users className="w-8 h-8 text-primary-600 mb-3 flex-shrink-0" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">Chauffeurs</h3>
+            <p className="text-sm text-gray-600 mb-4 line-clamp-2">Gérez vos chauffeurs</p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 break-words">{chauffeurs.length}</span>
+              <span className="text-sm text-primary-600 flex-shrink-0">Voir →</span>
             </div>
           </Link>
 
-          <Link href="/dashboard/trajets" className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow w-full max-w-full">
-            <MapPin className="w-8 h-8 text-primary-600 mb-3" />
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Trajets</h3>
-            <p className="text-sm text-gray-600 mb-4">Suivez vos missions</p>
-            <div className="flex items-center justify-between">
-              <span className="text-xl sm:text-2xl font-bold text-gray-900">{metrics.missionsTotal}</span>
-              <span className="text-sm text-primary-600">Voir →</span>
+          <Link href="/dashboard/trajets" className="bg-white rounded-lg shadow-md border border-gray-200 p-4 sm:p-6 hover:shadow-lg transition-shadow w-full max-w-full overflow-hidden">
+            <MapPin className="w-8 h-8 text-primary-600 mb-3 flex-shrink-0" />
+            <h3 className="text-lg font-bold text-gray-900 mb-2 truncate">Trajets</h3>
+            <p className="text-sm text-gray-600 mb-4 line-clamp-2">Suivez vos missions</p>
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 break-words">{metrics.missionsTotal}</span>
+              <span className="text-sm text-primary-600 flex-shrink-0">Voir →</span>
             </div>
           </Link>
         </div>

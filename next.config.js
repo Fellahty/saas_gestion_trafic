@@ -3,6 +3,26 @@ const nextConfig = {
   reactStrictMode: false, // Désactivé temporairement pour éviter les double-renders en dev
   // Configuration Turbopack vide (requis pour Next.js 16)
   turbopack: {},
+  // Configuration des images pour permettre les domaines externes
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cdn.brandfetch.io',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/**',
+      },
+    ],
+  },
   // Configuration Webpack pour compatibilité
   webpack: (config, { isServer, dev }) => {
     // Optimisations pour le mode dev

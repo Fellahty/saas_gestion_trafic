@@ -73,6 +73,21 @@
   }
 }
 
+@layer utilities {
+  /* Prevent text overflow in numbers and currency */
+  .text-ellipsis-safe {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  /* Break long numbers/currency but keep them readable */
+  .number-wrap {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+}
+
 @keyframes blob {
   0% {
     transform: translate(0px, 0px) scale(1);

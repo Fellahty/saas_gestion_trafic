@@ -38,6 +38,10 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5, // Permet le zoom jusqu'à 500% pour l'accessibilité (WCAG 2.1)
+  userScalable: true, // Permet le zoom pour les utilisateurs qui en ont besoin
   themeColor: '#0ea5e9',
 }
 

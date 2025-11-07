@@ -1,22 +1,41 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, getDocs, doc, updateDoc, getDoc, Timestamp } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/firebase.config';
 import { User, UserRole } from '@/lib/types';
-import { Users, Shield, Mail, User as UserIcon, Plus, Edit2, Trash2 } from 'lucide-react';
+import { Users, Shield, Mail, User as UserIcon, Plus, Edit2, Trash2, Building2 } from 'lucide-react';
+
+interface CompanySettings {
+  nom: string;
+  description: string;
+  pays: string;
+  email: string;
+  telephone?: string;
+  adresse?: string;
+  ville?: string;
+  codePostal?: string;
+}
 
 export default function ParametresPage() {
   const [user] = useAuthState(auth);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'users' | 'profile'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'profile' | 'entreprise'>('users');
   const [showUserForm, setShowUserForm] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [companySettings, setCompanySettings] = useState<CompanySettings>({
+    nom: 'FleetManager',
+    description: 'Gestion de flotte professionnelle',
+    pays: 'Maroc',
+    email: 'contact@fleetmanager.ma',
+  });
+  const [loadingCompany, setLoadingCompany] = useState(false);
 
   useEffect(() => {
     loadData();
+    loadCompanySettings();
   }, []);
 
   const loadData = async () => {
@@ -110,6 +129,56 @@ export default function ParametresPage() {
     loadData();
   };
 
+  const loadCompanySettings = async () => {
+    try {
+      const settingsDoc = await getDoc(doc(db, 'settings', 'company'));
+      if (settingsDoc.exists()) {
+        const data = settingsDoc.data();
+        setCompanySettings({
+          nom: data.nom || 'FleetManager',
+          description: data.description || 'Gestion de flotte professionnelle',
+          pays: data.pays || 'Maroc',
+          email: data.email || 'contact@fleetmanager.ma',
+          telephone: data.telephone || '',
+          adresse: data.adresse || '',
+          ville: data.ville || '',
+          codePostal: data.codePostal || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading company settings:', error);
+    }
+  };
+
+  const handleSaveCompanySettings = async (settings: CompanySettings) => {
+    setLoadingCompany(true);
+    try {
+      const settingsRef = doc(db, 'settings', 'company');
+      const settingsDoc = await getDoc(settingsRef);
+      
+      if (settingsDoc.exists()) {
+        await updateDoc(settingsRef, {
+          ...settings,
+          updatedAt: Timestamp.now(),
+        });
+      } else {
+        // Create document if it doesn't exist
+        await setDoc(settingsRef, {
+          ...settings,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        });
+      }
+      setCompanySettings(settings);
+      alert('Paramètres de l\'entreprise enregistrés avec succès!');
+    } catch (error) {
+      console.error('Error saving company settings:', error);
+      alert('Erreur lors de l\'enregistrement des paramètres');
+    } finally {
+      setLoadingCompany(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -150,6 +219,17 @@ export default function ParametresPage() {
         >
           <UserIcon size={16} className="sm:w-[18px] sm:h-[18px]" />
           <span>Profil</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('entreprise')}
+          className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 border-b-2 transition-colors text-xs sm:text-sm whitespace-nowrap ${
+            activeTab === 'entreprise'
+              ? 'border-primary-600 text-primary-600'
+              : 'border-transparent text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          <Building2 size={16} className="sm:w-[18px] sm:h-[18px]" />
+          <span>Entreprise</span>
         </button>
       </div>
 
@@ -319,6 +399,15 @@ export default function ParametresPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Entreprise Tab */}
+      {activeTab === 'entreprise' && (
+        <CompanySettingsForm
+          settings={companySettings}
+          onSave={handleSaveCompanySettings}
+          loading={loadingCompany}
+        />
       )}
 
       {/* User Form Modal */}
@@ -511,6 +600,155 @@ function UserForm({ user, onClose, onSuccess }: { user: User | null; onClose: ()
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function CompanySettingsForm({ 
+  settings, 
+  onSave, 
+  loading 
+}: { 
+  settings: CompanySettings; 
+  onSave: (settings: CompanySettings) => void;
+  loading: boolean;
+}) {
+  const [formData, setFormData] = useState<CompanySettings>(settings);
+
+  useEffect(() => {
+    setFormData(settings);
+  }, [settings]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <Building2 size={24} className="text-primary-600" />
+          Informations de l'entreprise
+        </h2>
+        <p className="text-gray-600 mt-1 text-sm">
+          Ces informations seront utilisées dans les factures PDF
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nom de l'entreprise *
+            </label>
+            <input
+              type="text"
+              value={formData.nom}
+              onChange={(e) => setFormData({ ...formData, nom: e.target.value })}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description *
+            </label>
+            <input
+              type="text"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Email *
+            </label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Téléphone
+            </label>
+            <input
+              type="tel"
+              value={formData.telephone || ''}
+              onChange={(e) => setFormData({ ...formData, telephone: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Pays *
+            </label>
+            <input
+              type="text"
+              value={formData.pays}
+              onChange={(e) => setFormData({ ...formData, pays: e.target.value })}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Adresse
+            </label>
+            <input
+              type="text"
+              value={formData.adresse || ''}
+              onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Ville
+            </label>
+            <input
+              type="text"
+              value={formData.ville || ''}
+              onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Code postal
+            </label>
+            <input
+              type="text"
+              value={formData.codePostal || ''}
+              onChange={(e) => setFormData({ ...formData, codePostal: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Enregistrement...' : 'Enregistrer'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

@@ -4,11 +4,11 @@ import { useEffect, useState, useMemo } from 'react';
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, query, orderBy, where, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase.config';
 import { Facture, Client, LigneFacture, Reglement, Mission, Recette } from '@/lib/types';
-import { Plus, Edit, Trash2, Download, FileText, Search, Filter, X, CheckCircle2, Clock, AlertCircle, Zap, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Download, FileText, Search, Filter, X, CheckCircle2, Clock, AlertCircle, Zap, Loader2, Eye } from 'lucide-react';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { generateFacturePDF } from '@/lib/pdf-generator';
+import { generateFacturePDF, previewFacturePDF } from '@/lib/pdf-generator';
 import FactureForm from './FactureForm';
 
 export default function FacturesPage() {
@@ -296,6 +296,20 @@ export default function FacturesPage() {
     }
   };
 
+  const handlePreviewPDF = async (facture: Facture) => {
+    try {
+      const client = clients.find(c => c.id === facture.clientId);
+      if (!client) {
+        alert('Client introuvable');
+        return;
+      }
+      await previewFacturePDF(facture, client);
+    } catch (error) {
+      console.error('Error previewing PDF:', error);
+      alert('Erreur lors de l\'aperçu du PDF');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -465,10 +479,18 @@ export default function FacturesPage() {
                         })()}
                       </td>
                       <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-xs sm:text-sm font-medium">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1 sm:gap-2 flex-wrap">
+                          <button
+                            onClick={() => handlePreviewPDF(facture)}
+                            className="text-indigo-600 hover:text-indigo-900 flex items-center gap-1 px-2 sm:px-3 py-1.5 rounded-md hover:bg-indigo-50 transition-colors border border-indigo-200 hover:border-indigo-300"
+                            title="Aperçu"
+                          >
+                            <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />
+                            <span className="text-xs font-medium">Aperçu</span>
+                          </button>
                           <button
                             onClick={() => handleGeneratePDF(facture)}
-                            className="text-primary-600 hover:text-primary-900"
+                            className="text-primary-600 hover:text-primary-900 p-1.5 hover:bg-primary-50 rounded-md transition-colors"
                             title="Télécharger PDF"
                           >
                             <Download size={16} className="sm:w-[18px] sm:h-[18px]" />
@@ -478,14 +500,14 @@ export default function FacturesPage() {
                               setSelectedFacture(facture);
                               setShowForm(true);
                             }}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-blue-600 hover:text-blue-900 p-1.5 hover:bg-blue-50 rounded-md transition-colors"
                             title="Modifier"
                           >
                             <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
                           </button>
                           <button
                             onClick={() => handleDeleteFacture(facture.id)}
-                            className="text-red-600 hover:text-red-900"
+                            className="text-red-600 hover:text-red-900 p-1.5 hover:bg-red-50 rounded-md transition-colors"
                             title="Supprimer"
                           >
                             <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />

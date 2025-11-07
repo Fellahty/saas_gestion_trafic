@@ -17,6 +17,10 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    /* Prévention des problèmes de zoom sur mobile */
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
   body {
@@ -24,6 +28,10 @@
     line-height: 1.5;
     font-weight: 400;
     color: #111827; /* gray-900 */
+    /* Empêche le scroll horizontal lors du zoom */
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 
   /* Accessibility: Focus styles for keyboard navigation (WCAG 2.1 AA) */
@@ -85,6 +93,63 @@
   .number-wrap {
     word-break: break-word;
     overflow-wrap: anywhere;
+  }
+
+  /* Gestion du zoom et responsive design */
+  
+  /* Container principal - prévient le débordement horizontal lors du zoom */
+  .container-zoom-safe {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    /* Permet le scroll horizontal seulement si nécessaire */
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Table responsive avec scroll horizontal si nécessaire */
+  .table-zoom-safe {
+    width: 100%;
+    overflow-x: auto;
+    display: block;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prévention du débordement lors du zoom extrême */
+  /* Note: box-sizing: border-box est déjà défini par Tailwind CSS */
+  
+  /* Images et médias responsives */
+  img, video, iframe {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* Grid et flexbox adaptatifs au zoom */
+  @media (max-width: 640px) {
+    /* Sur petits écrans avec zoom, forcer la largeur complète */
+    .zoom-mobile-full {
+      width: 100vw;
+      max-width: 100vw;
+      margin-left: 0;
+      margin-right: 0;
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+  }
+  
+  /* Amélioration de la lisibilité lors du zoom */
+  @media (min-resolution: 192dpi) {
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+  }
+  
+  /* Support des préférences de zoom utilisateur */
+  @media (prefers-contrast: high) {
+    /* Améliorer le contraste lors du zoom pour meilleure lisibilité */
+    body {
+      color: #000000;
+    }
   }
 }
 
